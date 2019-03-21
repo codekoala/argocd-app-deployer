@@ -1,17 +1,44 @@
 #!/bin/sh
 
+_app=$(basename ${0})
+_version="v0.0.3"
+
+function usage() {
+    cat <<EOT
+${_app} ${_version}
+
+Overrides the tag for an Argo CD Application, allowing Argo CD to sync changes
+quickly.
+
+Usage:
+
+    $(basename ${0}) APP_NAME IMAGE_TAG
+
+Parameters:
+
+    APP_NAME    Name of the Argo CD Application to modify. May also be
+                specified using the ARGOCD_APP_NAME environment variable.
+    IMAGE_TAG   Tag to set for the Application. May also be specified using the
+                ARGOCD_IMAGE_TAG environment variable.
+
+Other Environment Variables:
+
+    ARGOCD_NAMESPACE  Namespace in which Argo CD is deployed.
+    KUBECONFIG        Path to the KUBECONFIG file to use when applying changes.
+    KUBECONFIG_BODY   Base64-encoded KUBECONFIG file body which will be decoded
+                      and written to $$KUBECONFIG if the file does not already
+                      exist.
+
+EOT
+}
+
 KUBECONFIG=${KUBECONFIG:-$HOME/.kube/config}
 ARGOCD_NAMESPACE=${ARGOCD_NAMESPACE:-argocd}
 ARGOCD_APP_NAME="${ARGOCD_APP_NAME:-$1}"
 ARGOCD_IMAGE_TAG="${ARGOCD_IMAGE_TAG:-$2}"
 
-if [ -z "${ARGOCD_APP_NAME}" ]; then
-    echo "Required environment variable ARGOCD_APP_NAME not set"
-    exit 1
-fi
-
-if [ -z "${ARGOCD_IMAGE_TAG}" ]; then
-    echo "Required environment variable ARGOCD_IMAGE_TAG not set"
+if [ -z "${ARGOCD_APP_NAME}" ] || [ -z "${ARGOCD_IMAGE_TAG}" ]; then
+    usage
     exit 1
 fi
 
