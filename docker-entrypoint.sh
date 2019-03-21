@@ -2,11 +2,10 @@
 
 KUBECONFIG=${KUBECONFIG:-$HOME/.kube/config}
 ARGOCD_NAMESPACE=${ARGOCD_NAMESPACE:-argocd}
-ARGOCD_APP_ENV=${ARGOCD_APP_ENV:-test}
-ARGOCD_APP_NAME=""
-# ARGOCD_IMAGE_TAG=""
+ARGOCD_APP_NAME="${ARGOCD_APP_NAME:-$1}"
+ARGOCD_IMAGE_TAG="${ARGOCD_IMAGE_TAG:-$2}"
 
-if [ -z "${ARGOCD_APP_NAME}" ] && [ -z "${ARGOCD_APP}" ]; then
+if [ -z "${ARGOCD_APP_NAME}" ]; then
     echo "Required environment variable ARGOCD_APP_NAME not set"
     exit 1
 fi
@@ -26,7 +25,6 @@ if [ ! -e "${KUBECONFIG}" ]; then
     echo "${KUBECONFIG_BODY}" | base64 -d > "${KUBECONFIG}"
 fi
 
-app="${ARGOCD_APP:-"${ARGOCD_APP_ENV}-${ARGOCD_APP_NAME}"}"
 patch=$(cat <<EOT
 [{
     "op": "replace",
@@ -40,4 +38,5 @@ patch=$(cat <<EOT
 EOT
 )
 
-kubectl --namespace "${ARGOCD_NAMESPACE}" patch app "${app}" --type=json --patch="${patch}"
+echo "Setting tag for app $ARGOCD_APP_NAME to $ARGOCD_IMAGE_TAG..."
+kubectl --namespace "${ARGOCD_NAMESPACE}" patch app "${ARGOCD_APP_NAME}" --type=json --patch="${patch}"
