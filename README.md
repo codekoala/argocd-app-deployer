@@ -60,7 +60,7 @@ with your CI system.
 * Generate a KUBECONFIG for the new ServiceAccount:
 
   ```shell
-  $ KUBECONFIG_BODY=$(docker run --rm -v ~/.kube:/root/.kube:ro codekoala/argocd-app-deployer:v0.0.4 mkkubeconfig argocd argocd-app-deployer | base64 -w 0)
+  $ KUBECONFIG_BODY=$(docker run --rm -v ~/.kube:/root/.kube:ro codekoala/argocd-app-deployer:v0.0.5 mkkubeconfig argocd argocd-app-deployer | base64 -w 0)
   ```
 
 * Copy the encoded output and put it into your CI system. It could be as a
@@ -77,5 +77,5 @@ with your CI system.
 * Attempt to deploy an update:
 
   ```shell
-  $ docker run --rm -e KUBECONFIG_BODY="${KUBECONFIG_BODY}" codekoala/argocd-app-deployer:v0.0.4 deploy my-app v1.2.3
+  $ docker run --rm -e KUBECONFIG_BODY="${KUBECONFIG_BODY}" codekoala/argocd-app-deployer:v0.0.5 deploy my-postgres postgres 11.2-alpine
   ```

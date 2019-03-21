@@ -1,7 +1,7 @@
 #!/bin/sh
 
 _app=$(basename ${0})
-_version="v0.0.3"
+_version="v0.0.4"
 
 function usage() {
     cat <<EOT
@@ -12,13 +12,15 @@ quickly.
 
 Usage:
 
-    $(basename ${0}) APP_NAME IMAGE_TAG
+    $(basename ${0}) APP_NAME IMAGE TAG
 
 Parameters:
 
     APP_NAME    Name of the Argo CD Application to modify. May also be
                 specified using the ARGOCD_APP_NAME environment variable.
-    IMAGE_TAG   Tag to set for the Application. May also be specified using the
+    IMAGE       Docker image to use for the Application. May also be specified
+                using the ARGOCD_APP_IMAGE environment variable.
+    TAG         Tag to set for the Application. May also be specified using the
                 ARGOCD_IMAGE_TAG environment variable.
 
 Other Environment Variables:
@@ -35,9 +37,10 @@ EOT
 KUBECONFIG=${KUBECONFIG:-$HOME/.kube/config}
 ARGOCD_NAMESPACE=${ARGOCD_NAMESPACE:-argocd}
 ARGOCD_APP_NAME="${ARGOCD_APP_NAME:-$1}"
-ARGOCD_IMAGE_TAG="${ARGOCD_IMAGE_TAG:-$2}"
+ARGOCD_APP_IMAGE="${ARGOCD_APP_IMAGE:-$2}"
+ARGOCD_IMAGE_TAG="${ARGOCD_IMAGE_TAG:-$3}"
 
-if [ -z "${ARGOCD_APP_NAME}" ] || [ -z "${ARGOCD_IMAGE_TAG}" ]; then
+if [ -z "${ARGOCD_APP_NAME}" ] || [ -z "${ARGOCD_APP_IMAGE}" ] || [ -z "${ARGOCD_IMAGE_TAG}" ]; then
     usage
     exit 1
 fi
@@ -55,12 +58,22 @@ fi
 patch=$(cat <<EOT
 [{
     "op": "replace",
-    "path": "/spec/source/componentParameterOverrides/0/value",
-    "value": "${ARGOCD_IMAGE_TAG}"
+    "path": "/spec/source/componentParameterOverrides",
+    "value": [{
+        "component": "imagetag",
+        "name": "${ARGOCD_APP_IMAGE}",
+        "value": "${ARGOCD_IMAGE_TAG}"
+    }]
 }, {
     "op": "replace",
-    "path": "/spec/source/kustomize/imageTags/0/value",
-    "value": "${ARGOCD_IMAGE_TAG}"
+    "path": "/spec/source/kustomize",
+    "value": {
+        "imageTags": [{
+            "component": "imagetag",
+            "name": "${ARGOCD_APP_IMAGE}",
+            "value": "${ARGOCD_IMAGE_TAG}"
+        }]
+    }
 }]
 EOT
 )
